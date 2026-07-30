@@ -14,7 +14,7 @@ use App\Http\Controllers\Penjual\DashboardController as PenjualDashboardControll
 
 // 1. Halaman Utama / Daftar Harga Publik
 Route::get('/', function () {
-    return view('welcome'); // Ganti dengan view utama/harga Anda
+    return view('welcome');
 })->name('home');
 
 // 2. Route Tamu / Guest (Hanya untuk yang belum login)
@@ -24,12 +24,16 @@ Route::middleware('guest')->group(function () {
 
     Route::get('/register', [AuthController::class, 'registerForm'])->name('register');
     Route::post('/register', [AuthController::class, 'register']);
+
+    // Rute Lupa Password
+    Route::get('/forgot-password', [AuthController::class, 'forgotPasswordForm'])->name('password.request');
+    Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
 });
 
 // 3. Route Terproteksi (Harus Login)
 Route::middleware('auth')->group(function () {
     
-    // Logout (Mendukung method POST dan GET)
+    // Logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/logout', [AuthController::class, 'logout']);
 
@@ -40,6 +44,9 @@ Route::middleware('auth')->group(function () {
         // Kelola Penjual / Nasabah (Termasuk Fitur Hapus)
         Route::get('/penjual', [PenjualController::class, 'index'])->name('penjual.index');
         Route::delete('/penjual/{id}', [PenjualController::class, 'destroy'])->name('penjual.destroy');
+
+        // Kelola Jenis Sampah (Perbaikan error RouteNotFoundException)
+        Route::get('/jenis-sampah', function() { return view('admin.jenis-sampah.index'); })->name('jenis-sampah.index');
 
         // Route Menu Admin Lainnya
         Route::get('/setoran', function() { return view('admin.setoran.index'); })->name('setoran.index');
