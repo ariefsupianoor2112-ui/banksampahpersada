@@ -3,20 +3,17 @@
 @section('title', 'Dashboard Saya')
 
 @section('content')
-    <div class="mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-        <div>
-            <h1 class="text-2xl font-bold text-[#1b4332]">Halo, {{ $user->name }} 👋</h1>
-            <p class="text-slate-500 text-sm mt-1">Ini ringkasan tabungan sampahmu.</p>
-        </div>
-        <div class="flex gap-2">
-            <a href="{{ route('penjual.setoran.create') }}" class="bg-[#1b4332] hover:bg-[#2d6a4f] transition text-white font-semibold text-sm px-4 py-2.5 rounded-lg">
-                + Ajukan Setoran
-            </a>
-            <a href="{{ route('penjual.tarik.create') }}" class="bg-amber-600 hover:bg-amber-700 transition text-white font-semibold text-sm px-4 py-2.5 rounded-lg">
-                Tarik Saldo
-            </a>
-        </div>
+   <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+    <div>
+        <h1 class="text-2xl font-bold text-[#1b4332] flex items-center gap-2">
+            Halo, {{ Auth::user()->name }} 👋
+            <span class="text-xs bg-emerald-100 text-emerald-800 font-mono font-semibold px-2.5 py-1 rounded-full border border-emerald-300">
+                {{ Auth::user()->id_nasabah ?? 'Belum Ada ID' }}
+            </span>
+        </h1>
+        <p class="text-slate-500 text-sm mt-1">Ini ringkasan tabungan sampahmu.</p>
     </div>
+</div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
         <div class="bg-[#1b4332] text-white rounded-2xl p-6">
