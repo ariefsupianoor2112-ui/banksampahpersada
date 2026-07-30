@@ -18,12 +18,21 @@ class PenjualController extends Controller
         return view('admin.penjual.index', compact('penjual'));
     }
 
-    public function show(User $penjual)
+   public function show(User $penjual)
     {
         abort_if($penjual->role !== 'penjual', 404);
 
         $riwayat = $penjual->transaksis()->with('jenisSampah')->latest()->paginate(15);
 
         return view('admin.penjual.show', compact('penjual', 'riwayat'));
+    }
+
+    public function destroy(User $penjual)
+    {
+        abort_if($penjual->role !== 'penjual', 404);
+
+        $penjual->delete();
+
+        return redirect()->route('admin.nasabah.index')->with('status', 'Data nasabah berhasil dihapus.');
     }
 }
