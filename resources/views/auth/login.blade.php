@@ -15,16 +15,26 @@
     <!-- Form Card -->
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-7 mt-6">
         <h2 class="text-xl font-bold text-[#1b4332]">Masuk ke akun kamu</h2>
-        <p class="text-slate-500 text-sm mt-1 mb-6">Gunakan email dan kata sandi yang terdaftar.</p>
+        <p class="text-slate-500 text-sm mt-1 mb-6">Gunakan ID Nasabah / Email dan kata sandi yang terdaftar.</p>
+
+        <!-- PEMBERITAHUAN ERROR (Bila Login Gagal) -->
+        @if($errors->any())
+            <div class="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 text-sm rounded-lg">
+                {{ $errors->first() }}
+            </div>
+        @endif
 
         <form action="{{ url('/login') }}" method="POST" class="space-y-4">
             @csrf
 
             <div>
-                <label class="block text-xs font-bold uppercase tracking-wide text-slate-500 mb-1.5">Email</label>
-                <input type="email" name="email" required autofocus value="{{ old('email') }}"
+                <label class="block text-xs font-bold uppercase tracking-wide text-slate-500 mb-1.5">ID Nasabah / Email</label>
+                <input type="text" name="login" required autofocus value="{{ old('login') }}"
                     class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1b4332] focus:border-[#1b4332]"
-                    placeholder="email@domain.com">
+                    placeholder="Contoh: NS001 atau email@domain.com">
+                @error('login')
+                    <span class="text-xs text-rose-500 mt-1 block">{{ $message }}</span>
+                @enderror
             </div>
 
             <div>
@@ -32,6 +42,9 @@
                 <input type="password" name="password" required
                     class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1b4332] focus:border-[#1b4332]"
                     placeholder="Kata sandi">
+                @error('password')
+                    <span class="text-xs text-rose-500 mt-1 block">{{ $message }}</span>
+                @enderror
             </div>
 
             <label class="flex items-center gap-2 text-sm text-slate-500">
