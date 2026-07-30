@@ -20,11 +20,17 @@
         <form action="{{ url('/login') }}" method="POST" class="space-y-4">
             @csrf
 
+            @error('identitas')
+                <div class="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-2.5">
+                    {{ $message }}
+                </div>
+            @enderror
+
             <div>
-                <label class="block text-xs font-bold uppercase tracking-wide text-slate-500 mb-1.5">Email</label>
-                <input type="email" name="email" required autofocus value="{{ old('email') }}"
+                <label class="block text-xs font-bold uppercase tracking-wide text-slate-500 mb-1.5">ID Nasabah / Email</label>
+                <input type="text" name="identitas" required autofocus value="{{ old('identitas') }}"
                     class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1b4332] focus:border-[#1b4332]"
-                    placeholder="email@domain.com">
+                    placeholder="Contoh: NS001">
             </div>
 
             <div>
