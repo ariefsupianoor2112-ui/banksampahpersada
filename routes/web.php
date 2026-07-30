@@ -32,8 +32,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     Route::resource('jenis-sampah', JenisSampahController::class)->except(['show']);
 
-    Route::get('/nasabah', [PenjualController::class, 'index'])->name('nasabah.index');
+   Route::get('/nasabah', [PenjualController::class, 'index'])->name('nasabah.index');
     Route::get('/nasabah/{penjual}', [PenjualController::class, 'show'])->name('nasabah.show');
+    Route::delete('/nasabah/{penjual}', [PenjualController::class, 'destroy'])->name('nasabah.destroy');
 
     Route::get('/transaksi', [TransaksiController::class, 'index'])->name('transaksi.index');
     Route::get('/transaksi/create', [TransaksiController::class, 'create'])->name('transaksi.create');
