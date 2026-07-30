@@ -14,13 +14,21 @@ class AuthController extends Controller
         return view('auth.login');
     }
 
-    // Proses Login
+  // Proses Login
     public function login(Request $request)
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
+        $request->validate([
+            'identitas' => ['required', 'string'],
             'password' => ['required'],
         ]);
+
+        $identitas = $request->input('identitas');
+        $field = filter_var($identitas, FILTER_VALIDATE_EMAIL) ? 'email' : 'kode';
+
+        $credentials = [
+            $field => $field === 'kode' ? strtoupper($identitas) : $identitas,
+            'password' => $request->input('password'),
+        ];
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
@@ -33,6 +41,10 @@ class AuthController extends Controller
             return redirect()->intended('/penjual/dashboard');
         }
 
+        return back()->withErrors([
+            'identitas' => 'ID Nasabah/Email atau password salah.',
+        ])->onlyInput('identitas');
+    }
         return back()->withErrors([
             'email' => 'Email atau password salah.',
         ])->onlyInput('email');
@@ -55,7 +67,8 @@ class AuthController extends Controller
             'password' => ['required', 'string', 'min:6', 'confirmed'],
         ]);
 
-        $user = User::create([
+      $user = User::create([
+            'kode' => $this->generateKodeNasabah(),
             'name' => $validated['name'],
             'email' => $validated['email'],
             'no_hp' => $validated['no_hp'] ?? null,
@@ -67,7 +80,15 @@ class AuthController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->intended('/penjual/dashboard')->with('status', 'Akun berhasil dibuat. Selamat datang!');
+        return redirect()->intended('/penjual/dashboard')->with('status', "Akun berhasil dibuat. ID Nasabah kamu: {$user->kode} (catat baik-baik untuk login selanjutnya).");
+    }
+
+    private function generateKodeNasabah(): string
+    {
+        $last = User::where('role', 'penjual')->whereNotNull('kode')->orderByDesc('id')->value('kode');
+        $number = $last ? ((int) substr($last, 2)) + 1 : 1;
+
+        return 'NS' . str_pad((string) $number, 3, '0', STR_PAD_LEFT);
     }
 
     // Logout
