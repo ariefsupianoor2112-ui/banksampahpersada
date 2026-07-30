@@ -12,6 +12,7 @@
         <table class="w-full text-sm">
             <thead>
                 <tr class="bg-[#1b4332] text-white text-left">
+                    <th class="py-3 px-4">ID Nasabah</th>
                     <th class="py-3 px-4">Nama</th>
                     <th class="py-3 px-4">Kontak</th>
                     <th class="py-3 px-4 text-right">Saldo</th>
