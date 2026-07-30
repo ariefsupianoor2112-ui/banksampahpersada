@@ -72,7 +72,10 @@
                     <tbody class="divide-y divide-slate-100">
                         @forelse($transaksiTerbaru as $t)
                             <tr>
-                                <td class="py-2.5 pr-3 font-medium">{{ $t->user->name }}</td>
+                                <td class="py-2.5 pr-3">
+                                    <span class="font-medium text-slate-800 block">{{ $t->user->name }}</span>
+                                    <span class="text-xs text-slate-400 font-mono">{{ $t->user->id_nasabah ?? '-' }}</span>
+                                </td>
                                 <td class="py-2.5 pr-3 text-slate-500">{{ $t->jenisSampah->nama_sampah ?? '—' }}</td>
                                 <td class="py-2.5 pr-3">
                                     <span class="px-2 py-0.5 rounded-full text-xs font-semibold {{ $t->tipe === 'setor' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700' }}">
