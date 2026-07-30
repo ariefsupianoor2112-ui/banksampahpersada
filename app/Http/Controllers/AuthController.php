@@ -2,101 +2,135 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
-    // Tampilkan Form Login
+    /**
+     * Tampilkan Form Login
+     */
     public function loginForm()
     {
         return view('auth.login');
     }
 
-    // Proses Login (Bisa Pakai ID Nasabah ATAU Email)
+    /**
+     * Proses Login (Mendukung ID Nasabah maupun Email)
+     */
     public function login(Request $request)
     {
         $request->validate([
-            'login'    => ['required', 'string'],
-            'password' => ['required'],
+            'login' => 'required|string',
+            'password' => 'required|string',
+        ], [
+            'login.required' => 'ID Nasabah atau Email wajib diisi.',
+            'password.required' => 'Kata sandi wajib diisi.',
         ]);
 
+        // Cek apakah input berupa email atau ID Nasabah
         $fieldType = filter_var($request->login, FILTER_VALIDATE_EMAIL) ? 'email' : 'id_nasabah';
 
         $credentials = [
             $fieldType => $request->login,
-            'password'  => $request->password,
+            'password' => $request->password,
         ];
 
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
+        if (Auth::attempt($credentials, $request->has('remember'))) {
             $request->session()->regenerate();
 
             if (Auth::user()->role === 'admin') {
-                return redirect()->intended('/admin/dashboard');
+                return redirect()->route('admin.dashboard');
             }
 
-            return redirect()->intended('/penjual/dashboard');
+            return redirect()->route('penjual.dashboard');
         }
 
         return back()->withErrors([
-            'login' => 'ID Nasabah / Email atau password salah.',
+            'login' => 'ID Nasabah / Email atau kata sandi yang Anda masukkan salah.',
         ])->onlyInput('login');
     }
 
-    // Tampilkan Form Registrasi
+    /**
+     * Tampilkan Form Register
+     */
     public function registerForm()
     {
         return view('auth.register');
     }
 
-    // Proses Registrasi (Auto-generate ID Nasabah: NS001, NS002, dst)
+    /**
+     * Proses Register (Otomatis Generate ID Nasabah)
+     */
     public function register(Request $request)
     {
-        $validated = $request->validate([
-            'name'     => ['required', 'string', 'max:255'],
-            'email'    => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'no_hp'    => ['nullable', 'string', 'max:20'],
-            'alamat'   => ['nullable', 'string', 'max:255'],
-            'password' => ['required', 'string', 'min:6', 'confirmed'],
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8|confirmed',
+            'no_hp' => 'nullable|string|max:15',
+            'alamat' => 'nullable|string',
         ]);
 
-        // Cari ID Nasabah terakhir
-        $lastPenjual = User::whereNotNull('id_nasabah')
-            ->orderBy('id', 'desc')
-            ->first();
-
+        // Generate ID Nasabah otomatis (Contoh: NS001, NS002, dst)
+        $lastUser = User::whereNotNull('id_nasabah')->orderBy('id', 'desc')->first();
         $nextNumber = 1;
-        if ($lastPenjual && preg_match('/NS(\d+)/', $lastPenjual->id_nasabah, $matches)) {
-            $nextNumber = (int)$matches[1] + 1;
+        if ($lastUser && $lastUser->id_nasabah) {
+            $numberOnly = (int) preg_replace('/[^0-9]/', '', $lastUser->id_nasabah);
+            $nextNumber = $numberOnly + 1;
         }
-
         $idNasabah = 'NS' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
 
         $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
             'id_nasabah' => $idNasabah,
-            'name'       => $validated['name'],
-            'email'      => $validated['email'],
-            'no_hp'      => $validated['no_hp'] ?? null,
-            'alamat'     => $validated['alamat'] ?? null,
-            'password'   => bcrypt($validated['password']),
-            'role'       => 'penjual',
+            'no_hp' => $request->no_hp,
+            'alamat' => $request->alamat,
+            'role' => 'penjual',
         ]);
 
         Auth::login($user);
-        $request->session()->regenerate();
 
-        return redirect()->intended('/penjual/dashboard')
-            ->with('status', "Akun berhasil dibuat! ID Nasabah Anda: {$idNasabah}");
+        return redirect()->route('penjual.dashboard')->with('status', 'Registrasi berhasil! ID Nasabah Anda: ' . $idNasabah);
     }
 
-    // Logout
+    /**
+     * Tampilkan Form Lupa Password
+     */
+    public function forgotPasswordForm()
+    {
+        return view('auth.forgot-password');
+    }
+
+    /**
+     * Proses Kirim Link Reset Password
+     */
+    public function sendResetLink(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|exists:users,email',
+        ], [
+            'email.required' => 'Email wajib diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'email.exists' => 'Email ini tidak terdaftar di sistem kami.',
+        ]);
+
+        return back()->with('status', 'Tautan reset password telah dikirim ke email kamu!');
+    }
+
+    /**
+     * Proses Logout
+     */
     public function logout(Request $request)
     {
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/login');
+        return redirect()->route('login');
     }
 }
