@@ -17,10 +17,21 @@
         <h2 class="text-xl font-bold text-[#1b4332]">Masuk ke akun kamu</h2>
         <p class="text-slate-500 text-sm mt-1 mb-6">Gunakan ID Nasabah / Email dan kata sandi yang terdaftar.</p>
 
-        <!-- PEMBERITAHUAN ERROR (Bila Login Gagal) -->
+        <!-- NOTIFIKASI ERROR (SALAH PASSWORD / EMAIL / ID) -->
         @if($errors->any())
-            <div class="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 text-sm rounded-lg">
-                {{ $errors->first() }}
+            <div class="mb-5 p-4 bg-rose-50 border border-rose-200 text-rose-700 text-sm rounded-xl flex items-start gap-3 shadow-sm">
+                <span class="text-lg">⚠️</span>
+                <div>
+                    <strong class="font-semibold block mb-0.5">Gagal Masuk!</strong>
+                    <span>{{ $errors->first() }}</span>
+                </div>
+            </div>
+        @endif
+
+        <!-- NOTIFIKASI SUKSES (CONTOH: HABIS RESET PASSWORD) -->
+        @if(session('status'))
+            <div class="mb-5 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm rounded-xl shadow-sm">
+                {{ session('status') }}
             </div>
         @endif
 
@@ -32,19 +43,18 @@
                 <input type="text" name="login" required autofocus value="{{ old('login') }}"
                     class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1b4332] focus:border-[#1b4332]"
                     placeholder="Contoh: NS001 atau email@domain.com">
-                @error('login')
-                    <span class="text-xs text-rose-500 mt-1 block">{{ $message }}</span>
-                @enderror
             </div>
 
             <div>
-                <label class="block text-xs font-bold uppercase tracking-wide text-slate-500 mb-1.5">Kata Sandi</label>
+                <div class="flex items-center justify-between mb-1.5">
+                    <label class="block text-xs font-bold uppercase tracking-wide text-slate-500">Kata Sandi</label>
+                    @if (Route::has('password.request'))
+                        <a href="{{ route('password.request') }}" class="text-xs text-[#1b4332] font-semibold hover:underline">Lupa kata sandi?</a>
+                    @endif
+                </div>
                 <input type="password" name="password" required
                     class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1b4332] focus:border-[#1b4332]"
                     placeholder="Kata sandi">
-                @error('password')
-                    <span class="text-xs text-rose-500 mt-1 block">{{ $message }}</span>
-                @enderror
             </div>
 
             <label class="flex items-center gap-2 text-sm text-slate-500">
