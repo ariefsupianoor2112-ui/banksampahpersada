@@ -11,7 +11,7 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     protected $fillable = [
-        'id_nasabah', // <-- Ditambahkan agar ID Nasabah bisa disimpan
+        'id_nasabah',
         'name',
         'email',
         'password',
@@ -31,5 +31,13 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Relasi ke tabel Transaksi (Satu user punya banyak transaksi)
+     */
+    public function transaksis()
+    {
+        return $this->hasMany(Transaksi::class);
     }
 }
