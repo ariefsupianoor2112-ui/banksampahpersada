@@ -12,6 +12,7 @@
         <table class="w-full text-sm">
             <thead>
                 <tr class="bg-[#1b4332] text-white text-left">
+                    <th class="py-3 px-4">ID Nasabah</th>
                     <th class="py-3 px-4">Nama</th>
                     <th class="py-3 px-4">Kontak</th>
                     <th class="py-3 px-4 text-right">Saldo</th>
@@ -21,8 +22,8 @@
             <tbody class="divide-y divide-slate-100">
                 @forelse($penjual as $p)
                     @php $saldo = (int) ($p->total_setor ?? 0) - (int) ($p->total_tarik ?? 0); @endphp
-               <tr class="hover:bg-emerald-50/50">
-                        <td class="py-3 px-4 font-mono text-xs font-semibold text-[#1b4332]">{{ $p->kode ?? '—' }}</td>
+                    <tr class="hover:bg-emerald-50/50">
+                        <td class="py-3 px-4 font-mono text-xs font-semibold text-[#1b4332]">{{ $p->id_nasabah ?? '—' }}</td>
                         <td class="py-3 px-4">
                             <p class="font-semibold">{{ $p->name }}</p>
                             <p class="text-xs text-slate-400">{{ $p->email }}</p>
