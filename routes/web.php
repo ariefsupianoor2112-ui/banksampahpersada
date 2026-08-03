@@ -1,10 +1,18 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\Admin\PenjualController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\JenisSampahController;
+use App\Http\Controllers\Admin\PencairanController as AdminPencairanController;
+use App\Http\Controllers\Admin\PengaturanController as AdminPengaturanController;
+use App\Http\Controllers\Admin\PenjualController;
+use App\Http\Controllers\Admin\SetoranController as AdminSetoranController;
+use App\Http\Controllers\Admin\TransaksiController;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Penjual\DashboardController as PenjualDashboardController;
+use App\Http\Controllers\Penjual\SetoranController as PenjualSetoranController;
+use App\Http\Controllers\Penjual\TarikController as PenjualTarikController;
+use App\Http\Controllers\SampahController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -12,12 +20,10 @@ use App\Http\Controllers\Penjual\DashboardController as PenjualDashboardControll
 |--------------------------------------------------------------------------
 */
 
-// 1. Halaman Utama / Daftar Harga Publik
-Route::get('/', function () {
-    return view('welcome');
-})->name('home');
+// Halaman utama (Daftar Harga - publik)
+Route::get('/', [SampahController::class, 'index'])->name('home');
 
-// 2. Route Tamu / Guest (Hanya untuk yang belum login)
+// Rute Tamu (Guest) — hanya untuk yang belum login
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'loginForm'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
@@ -25,38 +31,53 @@ Route::middleware('guest')->group(function () {
     Route::get('/register', [AuthController::class, 'registerForm'])->name('register');
     Route::post('/register', [AuthController::class, 'register']);
 
-    // Rute Lupa Password
     Route::get('/forgot-password', [AuthController::class, 'forgotPasswordForm'])->name('password.request');
     Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
 });
 
-// 3. Route Terproteksi (Harus Login)
-Route::middleware('auth')->group(function () {
-    
-    // Logout
-    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-    Route::get('/logout', [AuthController::class, 'logout']);
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
-    // AREA ADMIN (Hanya Role Admin)
-    Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
-        Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
-        
-        // Kelola Penjual / Nasabah (Termasuk Fitur Hapus)
-        Route::get('/penjual', [PenjualController::class, 'index'])->name('penjual.index');
-        Route::delete('/penjual/{id}', [PenjualController::class, 'destroy'])->name('penjual.destroy');
+// Rute khusus Admin
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
-        // Kelola Jenis Sampah (Perbaikan error RouteNotFoundException)
-        Route::get('/jenis-sampah', function() { return view('admin.jenis-sampah.index'); })->name('jenis-sampah.index');
+    Route::resource('jenis-sampah', JenisSampahController::class)->except(['show']);
 
-        // Route Menu Admin Lainnya
-        Route::get('/setoran', function() { return view('admin.setoran.index'); })->name('setoran.index');
-        Route::get('/pencairan', function() { return view('admin.pencairan.index'); })->name('pencairan.index');
-        Route::get('/transaksi', function() { return view('admin.transaksi.index'); })->name('transaksi.index');
-    });
+    // Data Nasabah (termasuk fitur hapus)
+    Route::get('/nasabah', [PenjualController::class, 'index'])->name('nasabah.index');
+    Route::get('/nasabah/{penjual}', [PenjualController::class, 'show'])->name('nasabah.show');
+    Route::delete('/nasabah/{penjual}', [PenjualController::class, 'destroy'])->name('nasabah.destroy');
 
-    // AREA PENJUAL / NASABAH (Hanya Role Penjual)
-    Route::middleware('role:penjual')->prefix('penjual')->name('penjual.')->group(function () {
-        Route::get('/dashboard', [PenjualDashboardController::class, 'index'])->name('dashboard');
-    });
+    // Persetujuan pengajuan setoran dari nasabah
+    Route::get('/setoran', [AdminSetoranController::class, 'index'])->name('setoran.index');
+    Route::post('/setoran/{setoran}/approve', [AdminSetoranController::class, 'approve'])->name('setoran.approve');
+    Route::post('/setoran/{setoran}/reject', [AdminSetoranController::class, 'reject'])->name('setoran.reject');
 
+    // Persetujuan pengajuan tarik saldo dari nasabah
+    Route::get('/pencairan', [AdminPencairanController::class, 'index'])->name('pencairan.index');
+    Route::post('/pencairan/{pencairan}/approve', [AdminPencairanController::class, 'approve'])->name('pencairan.approve');
+    Route::post('/pencairan/{pencairan}/reject', [AdminPencairanController::class, 'reject'])->name('pencairan.reject');
+
+    // Setor langsung oleh admin / riwayat transaksi
+    Route::get('/transaksi', [TransaksiController::class, 'index'])->name('transaksi.index');
+    Route::get('/transaksi/create', [TransaksiController::class, 'create'])->name('transaksi.create');
+    Route::post('/transaksi', [TransaksiController::class, 'store'])->name('transaksi.store');
+    Route::post('/transaksi/tarik', [TransaksiController::class, 'tarik'])->name('transaksi.tarik');
+
+    // Pengaturan akun admin
+    Route::get('/pengaturan', [AdminPengaturanController::class, 'index'])->name('pengaturan.index');
+    Route::put('/pengaturan', [AdminPengaturanController::class, 'update'])->name('pengaturan.update');
+});
+
+// Rute khusus Penjual (nasabah)
+Route::middleware(['auth', 'role:penjual'])->prefix('penjual')->name('penjual.')->group(function () {
+    Route::get('/dashboard', [PenjualDashboardController::class, 'index'])->name('dashboard');
+
+    // Ajukan Setoran
+    Route::get('/setoran/ajukan', [PenjualSetoranController::class, 'create'])->name('setoran.create');
+    Route::post('/setoran', [PenjualSetoranController::class, 'store'])->name('setoran.store');
+
+    // Tarik Saldo
+    Route::get('/tarik', [PenjualTarikController::class, 'create'])->name('tarik.create');
+    Route::post('/tarik', [PenjualTarikController::class, 'store'])->name('tarik.store');
 });
